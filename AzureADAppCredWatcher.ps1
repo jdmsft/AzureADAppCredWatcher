@@ -1,5 +1,5 @@
 ﻿<#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .GUID 1c2b2e57-0b15-4288-949d-9ebd514e1faa
 .AUTHOR JDMSFT
 .COMPANYNAME JDMSFT
@@ -12,6 +12,7 @@
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
+    1.0.1   Fix Automation Runbook default description (512 char limit)
     1.0.0   First release (list aad aplication certs and secrets + optionally send mail report using o365 mail account)
 .PRIVATEDATA
 #>
@@ -21,26 +22,7 @@
     Azure AD Application Credential Watcher for Azure Automation (aka AzureADAppCredWatcher)
 
 .DESCRIPTION
-    Azure AD Application Credential Watcher : Watch if Azure AD application certificates & secrets expire soon (or have already expired) and send an alert (via Office 365 mail).
-
-
-    /!\ REQUIRE AZURE AUTOMATION /!\
-
-    Use this script as Azure Automation PowerShell runbook
-
-
-    /!\ REQUIRE AZURE AD SERVICE PRINCIPAL /!\
-
-    Like many apps / runbooks in Azure, Azure AD this runbook needs a service principal to run (also known as Automation RunAs Account / Automation Connection). This service principal needs to read Azure AD application data (e.g. Global Reader).
-
-    See https://github.com/jdmsft/AzureADAppCredWatcher#prerequisites for all details on how to create a dedicated Service Principal for this runbook.
-
-
-    /!\ REQUIRE AZURE AUTOMATION ASSETS (Shared Resources) /!\
-
-    * Connection : an AzureServicePrincipal connection used by "AAD App Cred Watcher" to read your Azure AD applications. 
-    * Certificate : used by above connection to authenticate with Azure Active Directory.
-    * Schedule : to automate your runbook execution, you should define an Automation schedule associated to this runbook for a recurring mail report (we recommend a 1-month recurrence without expiration).
+    Azure AD Application Credential Watcher (for Azure Automation) : Retrieve all Azure AD application credentials (secrets and certificates) and send a mail report via Office 365 mail account for <expire soon> and <expired> credentials statuses.
 
 .PARAMETER ExpireSoonMonthThreshold
    Mandatory (with default of "12").
@@ -67,6 +49,21 @@
     Enable or Disable the full app detailed output (Enabme is not recommended when you have a lot of applications and/or a lot of credentials associated)
 
 .NOTES
+
+    PREREQUSITES (see https://github.com/jdmsft/AzureADAppCredWatcher#prerequisites for full details)
+
+        /!\ REQUIRE AZURE AUTOMATION /!\
+        Use this script as Azure Automation PowerShell runbook
+
+
+        /!\ REQUIRE AZURE AD SERVICE PRINCIPAL /!\
+        Like many apps / runbooks in Azure, Azure AD this runbook needs a service principal to run (also known as Automation RunAs Account / Automation Connection). This service principal needs to read Azure AD application data (e.g. Global Reader).
+
+
+        /!\ REQUIRE AZURE AUTOMATION ASSETS (Shared Resources) /!\
+        * Connection : an AzureServicePrincipal connection used by "AAD App Cred Watcher" to read your Azure AD applications. 
+        * Certificate : used by above connection to authenticate with Azure Active Directory.
+        * Schedule : to automate your runbook execution, you should define an Automation schedule associated to this runbook for a recurring mail report (we recommend a 1-month recurrence without expiration).
 
     PS MODULE DEPENDENCIES
     AzureAD (tested on v2.0.2.135)
@@ -113,7 +110,7 @@ If ($PSPrivateMetadata.JobId)
     Write-Output "[CONNECTOR] Elapsed time : $($ConnectorTimer.Elapsed)"
 }
 
-Write-Output "`nAzure AD Application Credential Watcher v1.0.0-beta1`n(c) 2021 JDMSFT. All right Reserved.`n"
+Write-Output "`nAzure AD Application Credential Watcher v1.0.1`n(c) 2021 JDMSFT. All right Reserved.`n"
 Write-Warning "[RUNBOOK] You defined $ExpireSoonMonthThreshold months as month threshold. Every application credential less than $ExpireSoonMonthThreshold months will be flagged as <expire soon> in the final report."
 
 $output = @()

@@ -1,10 +1,16 @@
 # Azure AD App Credential Watcher
 
-Watch if Azure AD application certificates & secrets expire soon (or have already expired) and optionally send a mail report (using Office 365 mail account).
+Azure AD Application Credential Watcher (for Azure Automation) : Retrieve all Azure AD application credentials (secrets and certificates) and send a mail report via Office 365 mail account for <expire soon> and <expired> credentials statuses.
 
 ## What is it?
 
 **Azure AD App Credential Watcher** is an **Azure Automation** solution (PowerShell runbook) that help you to list all Azure AD applications secrets and certificates expiration statuses. And optionnaly send a mail report relying on Office 365 mailbox account (Exchange Online). See [Prerequistes below](https://github.com/jdmsft/AzureADAppCredWatcher#prerequisites) to use this solution.
+
+You can use this runbook to:
+
+* List all Azure AD application credentials in the console output
+* Send mail report (via Office 365 mail account) for Azure application credentials with <expire soon> and <expired> statuses
+* Or both!
 
 ## Prerequisites
 
