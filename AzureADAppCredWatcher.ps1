@@ -77,7 +77,7 @@ param (
     [string]$AADConnectionName = 'AADConnection',
     [boolean]$EnableO365MailNotification = $false,
     [string]$O365CredentialName = 'O365Credential',
-    [string]$MailRecipient = 'alias@domain.com',
+    [string]$MailRecipient,
     [boolean]$EnableOutputDetails = $false
 )
 
