@@ -1,5 +1,5 @@
 ﻿<#PSScriptInfo
-.VERSION 1.0.2
+.VERSION 1.1.0
 .GUID 1c2b2e57-0b15-4288-949d-9ebd514e1faa
 .AUTHOR JDMSFT
 .COMPANYNAME JDMSFT
@@ -12,9 +12,10 @@
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
-    1.0.2   Fix license link
-    1.0.1   Fix Automation Runbook default description (512 char limit)
-    1.0.0   First release (list aad aplication certs and secrets + optionally send mail report using o365 mail account)
+    1.1.0   minor and fix updates (fix expired status bug + add default minimal app cred counter output + disable AAD connector default verborsity)
+    1.0.2   fix license link
+    1.0.1   fix Automation Runbook default description (512 char limit)
+    1.0.0   first release (list aad aplication certs and secrets + optionally send mail report using o365 mail account)
 .PRIVATEDATA
 #>
 
@@ -80,21 +81,23 @@ param (
     [boolean]$EnableOutputDetails = $false
 )
 
+$RunbookVersion = '1.1.0'
+
 If ($PSPrivateMetadata.JobId)
 {
     Write-Verbose "Runbook environment : Azure Automation"
-    Write-Output "AzureAD Connector for Azure Automation v1.0.0`n(c) 2020 - 2021 JDMSFT. All right Reserved."
+    Write-Verbose "AzureAD Connector for Azure Automation v1.0.0`n(c) 2020 - 2021 JDMSFT. All right Reserved."
     $ConnectorTimer = [system.diagnostics.stopwatch]::StartNew()
 
     Try
     {
-        Write-Output "[CONNECTOR] Connecting to Azure AD ..."
+        Write-Verbose "[CONNECTOR] Connecting to Azure AD ..."
         $AutomationConnection = Get-AutomationConnection -Name $AADConnectionName
         Connect-AzureAD `
             -TenantId $AutomationConnection.TenantId `
             -ApplicationId $AutomationConnection.ApplicationId `
             -CertificateThumbprint $AutomationConnection.CertificateThumbprint `
-            | Out-Null
+        | Out-Null
     }
     Catch 
     {
@@ -109,10 +112,10 @@ If ($PSPrivateMetadata.JobId)
         }
     }
     $ConnectorTimer.Stop()
-    Write-Output "[CONNECTOR] Elapsed time : $($ConnectorTimer.Elapsed)"
+    Write-Verbose "[CONNECTOR] Elapsed time : $($ConnectorTimer.Elapsed)"
 }
 
-Write-Output "`nAzure AD Application Credential Watcher v1.0.2`n(c) 2021 JDMSFT. All right Reserved.`n"
+Write-Output "`nAzure AD Application Credential Watcher v$RunbookVersion`n(c) 2021 JDMSFT. All right Reserved.`n"
 Write-Warning "[RUNBOOK] You defined $ExpireSoonMonthThreshold months as month threshold. Every application credential less than $ExpireSoonMonthThreshold months will be flagged as <expire soon> in the final report."
 
 $output = @()
@@ -127,12 +130,13 @@ $apps | % {
     $appCert = $_.KeyCredentials
     $appSecret = $_.PasswordCredentials
 
-    If ($appCert) {$appCert | % { If ($_.EndDate -lt $today.AddMonths($ExpireSoonMonthThreshold)) { $credStatus = "Expire soon" } ElseIf ($_.EndDate -lt $today) { $credStatus = 'Expired' } Else { $credStatus = 'Valid' } ; $output += [PSCustomObject]@{Application = $appName ; ClientId = $appId ; ObjectId = $appObjectId ; CredentialType = 'Certificate' ; CredentialStatus = $credStatus ; CredentialRemainingDays = -[math]::Round(($today-$_.EndDate).TotalDays) ; CredentialId = $_.KeyId ; CredentialStart = $_.StartDate ; CredentialEnd = $_.EndDate } }}
+    If ($appCert) { $appCert | % { If ($_.EndDate -lt $today) { $credStatus = "Expired" } ElseIf ($_.EndDate -lt $today.AddMonths($ExpireSoonMonthThreshold)) { $credStatus = 'Expire soon' } Else { $credStatus = 'Valid' } ; $output += [PSCustomObject]@{Application = $appName ; ClientId = $appId ; ObjectId = $appObjectId ; CredentialType = 'Certificate' ; CredentialStatus = $credStatus ; CredentialRemainingDays = - [math]::Round(($today - $_.EndDate).TotalDays) ; CredentialId = $_.KeyId ; CredentialStart = $_.StartDate ; CredentialEnd = $_.EndDate } } }
     
-    If ($appSecret) {$appSecret | % { If ($_.EndDate -lt $today.AddMonths($ExpireSoonMonthThreshold)) { $credStatus = "Expire soon" } ElseIf ($_.EndDate -lt $today) { $credStatus = 'Expired' } Else { $credStatus = 'Valid' } ; $output += [PSCustomObject]@{Application = $appName ; ClientId = $appId ; ObjectId = $appObjectId ; CredentialType = 'Secret' ; CredentialStatus = $credStatus ; CredentialRemainingDays = - [math]::Round(($today - $_.EndDate).TotalDays) ; CredentialId = $_.KeyId ; CredentialStart = $_.StartDate ; CredentialEnd = $_.EndDate } }}
+    If ($appSecret) { $appSecret | % { If ($_.EndDate -lt $today) { $credStatus = "Expired" } ElseIf ($_.EndDate -lt $today.AddMonths($ExpireSoonMonthThreshold)) { $credStatus = 'Expire soon' } Else { $credStatus = 'Valid' } ; $output += [PSCustomObject]@{Application = $appName ; ClientId = $appId ; ObjectId = $appObjectId ; CredentialType = 'Secret' ; CredentialStatus = $credStatus ; CredentialRemainingDays = - [math]::Round(($today - $_.EndDate).TotalDays) ; CredentialId = $_.KeyId ; CredentialStart = $_.StartDate ; CredentialEnd = $_.EndDate } } }
 }
 
-If ($EnableOutputDetails) {$output | ft}
+Write-Output "[RUNBOOK] Found $($output.count) application credentials ! (certificates and secrets)."
+If ($EnableOutputDetails) { $output | ft }
 
 If ($output.CredentialStatus -contains "Expire soon") 
 {
@@ -140,14 +144,14 @@ If ($output.CredentialStatus -contains "Expire soon")
 
     If ($EnableO365MailNotification)
     {
-        $MailSubject  = "AAD App Credential Watcher : credential(s) expire soon !"
+        $MailSubject = "AAD App Credential Watcher : credential(s) expire soon !"
         $MailCredential = Get-AutomationPSCredential -Name $O365CredentialName
 
         Write-Output "[RUNBOOK] Send O365 mail for <Expire soon> AAD applications ..."
         Send-MailMessage -Credential $MailCredential -SmtpServer smtp.office365.com -Port 587 `
             -To $MailRecipient `
             -Subject $MailSubject `
-            -Body (($output | ? {$_.CredentialStatus -eq "Expire soon"} | ConvertTo-Html | Out-String) + "`n`nRECOMMENDATION : Please renew your application credential before it expires if you still use the application and associated credential.") `
+            -Body (($output | ? { $_.CredentialStatus -eq "Expire soon" } | ConvertTo-Html | Out-String) + "`n`nRECOMMENDATION : Please renew your application credential before it expires if you still use the application and associated credential.") `
             -From $MailCredential.UserName `
             -BodyAsHtml `
             -UseSsl
@@ -160,14 +164,14 @@ If ($output.CredentialStatus -contains "Expired")
 
     If ($EnableO365MailNotification)
     {
-        $MailSubject  = "AAD App Credential Watcher : credential(s) expired !"
+        $MailSubject = "AAD App Credential Watcher : credential(s) expired !"
         $MailCredential = Get-AutomationPSCredential -Name $O365CredentialName
 
         Write-Output "[RUNBOOK] Send O365 mail for <Expired> AAD applications ..."
         Send-MailMessage -Credential $MailCredential -SmtpServer smtp.office365.com -Port 587 `
             -To $MailRecipient `
             -Subject $MailSubject `
-            -Body (($output | ? {$_.CredentialStatus -eq "Expired"} | ConvertTo-Html | Out-String) + "`n`nRECOMMENDATION : You could remove your expired application credential (if you have not renewed it voluntarily) to keep a good management of your apps and dismiss this alert.") `
+            -Body (($output | ? { $_.CredentialStatus -eq "Expired" } | ConvertTo-Html | Out-String) + "`n`nRECOMMENDATION : You could remove your expired application credential (if you have not renewed it voluntarily) to keep a good management of your apps and dismiss this alert.") `
             -From $MailCredential.UserName `
             -BodyAsHtml `
             -UseSsl
