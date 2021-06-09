@@ -58,10 +58,11 @@
 
 
         /!\ REQUIRE AZURE AD SERVICE PRINCIPAL /!\
-        Like many apps / runbooks in Azure, Azure AD this runbook needs a service principal to run (also known as Automation RunAs Account / Automation Connection). This service principal needs to read Azure AD application data (e.g. Global Reader).
+        Like many apps / runbooks in Azure, Azure AD this runbook needs a service principal to run (also known as Automation RunAs Account / Automation Connection). This service principal needs to read Azure AD application data (e.g. Directory Reader).
 
 
         /!\ REQUIRE AZURE AUTOMATION ASSETS (Shared Resources) /!\
+        * Module : AzureAD
         * Connection : an AzureServicePrincipal connection used by "AAD App Cred Watcher" to read your Azure AD applications. 
         * Certificate : used by above connection to authenticate with Azure Active Directory.
         * Schedule : to automate your runbook execution, you should define an Automation schedule associated to this runbook for a recurring mail report (we recommend a 1-month recurrence without expiration).
@@ -127,6 +128,7 @@ $apps | % {
     $appSecret = $_.PasswordCredentials
 
     If ($appCert) {$appCert | % { If ($_.EndDate -lt $today.AddMonths($ExpireSoonMonthThreshold)) { $credStatus = "Expire soon" } ElseIf ($_.EndDate -lt $today) { $credStatus = 'Expired' } Else { $credStatus = 'Valid' } ; $output += [PSCustomObject]@{Application = $appName ; ClientId = $appId ; ObjectId = $appObjectId ; CredentialType = 'Certificate' ; CredentialStatus = $credStatus ; CredentialRemainingDays = -[math]::Round(($today-$_.EndDate).TotalDays) ; CredentialId = $_.KeyId ; CredentialStart = $_.StartDate ; CredentialEnd = $_.EndDate } }}
+    
     If ($appSecret) {$appSecret | % { If ($_.EndDate -lt $today.AddMonths($ExpireSoonMonthThreshold)) { $credStatus = "Expire soon" } ElseIf ($_.EndDate -lt $today) { $credStatus = 'Expired' } Else { $credStatus = 'Valid' } ; $output += [PSCustomObject]@{Application = $appName ; ClientId = $appId ; ObjectId = $appObjectId ; CredentialType = 'Secret' ; CredentialStatus = $credStatus ; CredentialRemainingDays = - [math]::Round(($today - $_.EndDate).TotalDays) ; CredentialId = $_.KeyId ; CredentialStart = $_.StartDate ; CredentialEnd = $_.EndDate } }}
 }
 

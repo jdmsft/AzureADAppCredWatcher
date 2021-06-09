@@ -15,7 +15,8 @@ You can use this runbook to:
 ## Prerequisites
 
 * An Azure Automation Account
-* A Azure AD Service Principal with certificate and read access to your Azure AD application you want to watch (e.g. Global Reader)
+* An Azure AD Service Principal with certificate and read access to your Azure AD application you want to watch (e.g. Directory Reader)
+* An Azure Automation Module : AzureAD
 * An Automation Connection (type = AzureServicePrincipal) refering to your Azure AD Service Principal
 * An Automation Certificate for the Automation Account
 * An Automation Schedule if you want to send report reccurently (e.g. monthly)
