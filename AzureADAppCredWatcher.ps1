@@ -77,7 +77,7 @@ param (
     [boolean]$EnableO365MailNotification = $false,
     [string]$O365CredentialName = 'O365Credential',
     [string]$MailRecipient = 'alias@domain.com',
-    [boolean]$EnableAppOutputDetails = $false
+    [boolean]$EnableOutputDetails = $false
 )
 
 If ($PSPrivateMetadata.JobId)
@@ -132,7 +132,7 @@ $apps | % {
     If ($appSecret) {$appSecret | % { If ($_.EndDate -lt $today.AddMonths($ExpireSoonMonthThreshold)) { $credStatus = "Expire soon" } ElseIf ($_.EndDate -lt $today) { $credStatus = 'Expired' } Else { $credStatus = 'Valid' } ; $output += [PSCustomObject]@{Application = $appName ; ClientId = $appId ; ObjectId = $appObjectId ; CredentialType = 'Secret' ; CredentialStatus = $credStatus ; CredentialRemainingDays = - [math]::Round(($today - $_.EndDate).TotalDays) ; CredentialId = $_.KeyId ; CredentialStart = $_.StartDate ; CredentialEnd = $_.EndDate } }}
 }
 
-If ($EnableAppOutputDetails) {$output | ft}
+If ($EnableOutputDetails) {$output | ft}
 
 If ($output.CredentialStatus -contains "Expire soon") 
 {
