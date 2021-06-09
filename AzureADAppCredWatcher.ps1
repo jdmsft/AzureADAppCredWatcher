@@ -1,5 +1,5 @@
 ﻿<#PSScriptInfo
-.VERSION 1.1.0
+.VERSION 1.1.1
 .GUID 1c2b2e57-0b15-4288-949d-9ebd514e1faa
 .AUTHOR JDMSFT
 .COMPANYNAME JDMSFT
@@ -12,6 +12,7 @@
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
+    1.1.1   remove MailRecipient default value
     1.1.0   minor and fix updates (fix expired status bug + add default minimal app cred counter output + disable AAD connector default verborsity)
     1.0.2   fix license link
     1.0.1   fix Automation Runbook default description (512 char limit)
@@ -81,7 +82,7 @@ param (
     [boolean]$EnableOutputDetails = $false
 )
 
-$RunbookVersion = '1.1.0'
+$RunbookVersion = '1.1.1'
 
 If ($PSPrivateMetadata.JobId)
 {
