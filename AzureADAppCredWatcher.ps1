@@ -1,17 +1,18 @@
 ﻿<#PSScriptInfo
-.VERSION 1.0.1
+.VERSION 1.0.2
 .GUID 1c2b2e57-0b15-4288-949d-9ebd514e1faa
 .AUTHOR JDMSFT
 .COMPANYNAME JDMSFT
 .COPYRIGHT (c) 2021 JDMSFT. All Right Reserved.
 .TAGS AzureAutomation Runbook AzureAD Application Credential Certificate Secret Expiration Notification Watcher Report AAD Cred Cert Expire Alert Notify Mail
-.LICENSEURI https://github.com/jdmsft/AzureADAppCredWatcher/LICENSE
+.LICENSEURI https://github.com/jdmsft/AzureADAppCredWatcher/blob/master/LICENSE
 .PROJECTURI https://github.com/jdmsft/AzureADAppCredWatcher
 .ICONURI
 .EXTERNALMODULEDEPENDENCIES
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
+    1.0.2   Fix license link
     1.0.1   Fix Automation Runbook default description (512 char limit)
     1.0.0   First release (list aad aplication certs and secrets + optionally send mail report using o365 mail account)
 .PRIVATEDATA
@@ -110,7 +111,7 @@ If ($PSPrivateMetadata.JobId)
     Write-Output "[CONNECTOR] Elapsed time : $($ConnectorTimer.Elapsed)"
 }
 
-Write-Output "`nAzure AD Application Credential Watcher v1.0.1`n(c) 2021 JDMSFT. All right Reserved.`n"
+Write-Output "`nAzure AD Application Credential Watcher v1.0.2`n(c) 2021 JDMSFT. All right Reserved.`n"
 Write-Warning "[RUNBOOK] You defined $ExpireSoonMonthThreshold months as month threshold. Every application credential less than $ExpireSoonMonthThreshold months will be flagged as <expire soon> in the final report."
 
 $output = @()
